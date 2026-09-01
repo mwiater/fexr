@@ -1,0 +1,18 @@
+version: 2
+
+project_name: fexr
+
+before:
+  hooks:
+    - go test ./...
+
+builds:
+  - id: fexr
+    main: .
+    binary: fexr
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w
