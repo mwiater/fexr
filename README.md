@@ -1,5 +1,7 @@
 # fexr
 
+<img src=".repo/fexr-logo.png" alt="fexr" width="150">
+
 fexr is a Go-based Model Context Protocol (MCP) server for retrieving and exploring current public web content. It exposes seven read-only tools over a JSON-RPC 2.0 HTTP endpoint at `/mcp`.
 
 | Tool | Purpose |
