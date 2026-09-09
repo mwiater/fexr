@@ -99,6 +99,11 @@ type SearchSiteArgs struct {
 	TimeoutSeconds int    `json:"timeout_seconds"`
 }
 
+// DiscoverJSONArgs represents the arguments for the discover_json tool.
+type DiscoverJSONArgs struct {
+	URL string `json:"url"`
+}
+
 // main is the application entry point. It sets up the HTTP server with routes
 // for the root endpoint and MCP endpoint, then starts listening for connections.
 func main() {
@@ -191,6 +196,7 @@ func handleMCP(w http.ResponseWriter, r *http.Request) {
 				tools.WeatherDefinition(),
 				tools.BrowseDefinition(),
 				tools.SearchSiteDefinition(),
+				tools.DiscoverJSONDefinition(),
 			},
 		})
 
@@ -292,6 +298,19 @@ func handleToolCall(raw json.RawMessage) (any, error) {
 			return nil, fmt.Errorf("invalid start_url: %w", err)
 		}
 		return tools.SearchSite(args.StartURL, args.Query, args.MaxPages, args.TimeoutSeconds, maxOutput)
+	case tools.DiscoverJSONToolName:
+		var args DiscoverJSONArgs
+		if err := json.Unmarshal(params.Arguments, &args); err != nil {
+			return nil, fmt.Errorf("invalid %s arguments: %w", tools.DiscoverJSONToolName, err)
+		}
+		if err := validateURL(args.URL); err != nil {
+			return nil, err
+		}
+		results, err := tools.DiscoverAllJSON(args.URL)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning URL: %w", err)
+		}
+		return tools.FormatForMCP(results), nil
 	default:
 		return nil, fmt.Errorf("unknown tool: %s", params.Name)
 	}

@@ -53,8 +53,8 @@ func TestHandleMCPToolsList(t *testing.T) {
 		t.Fatalf("unexpected tools type: %T", result["tools"])
 	}
 
-	if len(toolsValue) != 7 {
-		t.Fatalf("expected 7 tools, got %d", len(toolsValue))
+	if len(toolsValue) != 8 {
+		t.Fatalf("expected 8 tools, got %d", len(toolsValue))
 	}
 }
 

@@ -2,7 +2,7 @@
 
 <img src=".repo/fexr-logo.png" alt="fexr" width="150">
 
-fexr is a Go-based Model Context Protocol (MCP) server for retrieving and exploring current public web content. It exposes seven read-only tools over a JSON-RPC 2.0 HTTP endpoint at `/mcp`.
+fexr is a Go-based Model Context Protocol (MCP) server for retrieving and exploring current public web content. It exposes eight read-only tools over a JSON-RPC 2.0 HTTP endpoint at `/mcp`.
 
 | Tool | Purpose |
 | --- | --- |
@@ -13,6 +13,7 @@ fexr is a Go-based Model Context Protocol (MCP) server for retrieving and explor
 | `weather` | Return current conditions and a five-day forecast. |
 | `browse` | Render one JavaScript-enabled page and return text and links. |
 | `search_site` | Discover relevant content across several pages on one site. |
+| `discover_json` | Find embedded JSON and JSON returned by browser network requests. |
 
 fexr does not bypass authentication, CAPTCHAs, paywalls, or other access restrictions.
 
@@ -39,15 +40,16 @@ For best results, enable automatic tool selection in the MCP host and add an ins
 Use fexr automatically when an answer requires current information from a
 public website or URL. Do not require the user to name a tool. Prefer browse
 for one JavaScript-rendered page, search_site when links may need to be
-followed, fetch_url_as_text for static HTML, and the JSON or RSS tools for
-matching structured endpoints.
+followed, discover_json when a rendered page may contain embedded application
+state or background JSON requests, fetch_url_as_text for static HTML, and the
+JSON or RSS tools for matching structured endpoints.
 ```
 
 ## Requirements
 
 - The Go version declared by `go.mod` (currently Go 1.26.1)
 - `curl` and `html2text`
-- The Playwright driver and Chromium for `browse` and `search_site`
+- The Playwright driver and Chromium for `browse`, `search_site`, and `discover_json`
 
 Ubuntu/Debian installation:
 
@@ -179,6 +181,50 @@ Representative output:
   "content":[{"type":"text","text":"{\n  \"login\": \"octocat\", ...\n}"}]
 }
 ```
+
+### `discover_json`
+
+Scans a JavaScript-rendered page for parseable JSON in recognized embedded
+script elements and in responses whose content type is JSON. This is useful for
+single-page applications whose useful data is loaded into page state or fetched
+by XHR/fetch rather than exposed as visible text.
+
+Input: `url` (required HTTP/HTTPS URL).
+
+The tool recognizes `script[type="application/json"]`,
+`script[type="application/ld+json"]`, `script#__NEXT_DATA__`, and
+`script#svelte-announcer`. It waits briefly after page load so background
+requests can complete, then returns each parsed value with its source type and
+URL. Results are formatted as JSON text and capped at 50,000 bytes.
+
+Example prompt:
+
+> Find the embedded data and background JSON used by https://www.allrecipes.com/recipe/20869/calzones/.
+
+Example MCP tool call:
+
+```json
+{"name":"discover_json","arguments":{"url":"https://example.com"}}
+```
+
+Representative output:
+
+```json
+[
+  {
+    "source_type":"DOM: application/ld+json",
+    "source_url":"https://example.com/",
+    "data":{"@type":"WebSite","name":"Example Domain"}
+  },
+  {
+    "source_type":"Network: XHR/Fetch",
+    "source_url":"https://example.com/api/config",
+    "data":{"enabled":true,"version":"1.0"}
+  }
+]
+```
+
+If no parseable values are found, the tool returns `No JSON objects found via DOM or Network.`
 
 ### `geocode`
 

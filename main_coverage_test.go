@@ -89,8 +89,8 @@ func TestToolDefinitionsContract(t *testing.T) {
 		t.Fatal(err)
 	}
 	definitions := response["result"].(map[string]any)["tools"].([]any)
-	if len(definitions) != 7 {
-		t.Fatalf("expected 7 tools, got %d", len(definitions))
+	if len(definitions) != 8 {
+		t.Fatalf("expected 8 tools, got %d", len(definitions))
 	}
 	seen := map[string]bool{}
 	for _, value := range definitions {
